@@ -6,10 +6,7 @@ import com.teamtreehouse.model.Player;
 import com.teamtreehouse.model.Team;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by nicolasjhampton on 10/16/16.
@@ -36,6 +33,7 @@ public class Prompter {
         this.menu.put("remove", "Remove a player to a team (add)");
         this.menu.put("teams", "Show a list of teams (teams)");
         this.menu.put("team", "Display a sorted team list (team)");
+        this.menu.put("generate", "Auto generate entire league (generate)");
         this.menu.put("quit", "Quit the program (quit)");
     }
 
@@ -98,6 +96,9 @@ public class Prompter {
             case "players":
                 players();
                 break;
+            case "generate":
+                generate();
+                break;
             case "quit":
                 System.out.println("Goodbye!");
                 break;
@@ -155,7 +156,7 @@ public class Prompter {
                         playerChange[0].getFirstName(),
                         playerChange[0].getLastName());
         if(playerChange[1] != null) {
-            flash += String.format("Welcome to the league %s %s!%n",
+            flash += String.format("Welcome to the league %s %s!",
                     playerChange[1].getFirstName(),
                     playerChange[1].getLastName());
         }
@@ -208,8 +209,22 @@ public class Prompter {
         choosePlayer(league);
     }
 
+    private void generate() throws IOException {
+        String teamName = "";
+        String coach = "";
+        Map<String, String> teamsToBeCreated = new HashMap<>();
+        do {
+            teamName = promptTeamName();
+            coach = promptTeamCoach();
+            if(!teamName.equals("") && !coach.equals("")) {
+                teamsToBeCreated.put(teamName, coach);
+            }
+        } while(!teamName.equals("") || !coach.equals(""));
 
+        league.generateLeague(teamsToBeCreated);
 
+        printTeams();
+    }
 
     ///////////////////////////////////////////////////
     // General IO Helpers
@@ -270,11 +285,21 @@ public class Prompter {
 
     private Team createTeam() throws IOException {
         printTeams();
+        String teamName = promptTeamName();
+        String coach = promptTeamCoach();
+        return new Team(teamName, coach);
+    }
+
+    private String promptTeamName() throws IOException {
         System.out.print("Name of the new team: ");
         String teamName = reader.readLine();
+        return teamName;
+    }
+
+    private String promptTeamCoach() throws IOException {
         System.out.print("Name of the team coach: ");
         String coach = reader.readLine();
-        return new Team(teamName, coach);
+        return coach;
     }
 
     private Player createPlayer() throws IOException {

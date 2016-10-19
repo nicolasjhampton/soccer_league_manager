@@ -6,7 +6,7 @@ import java.util.*;
  * Created by nicolasjhampton on 10/16/16.
  */
 public class League implements ListOfPlayers {
-    private final Set<Team> teams;
+    private final TreeSet<Team> teams;
     private final Set<Player> players;
     private final int MAX_PLAYERS;
     private final ArrayDeque<Player> waitingList;
@@ -27,7 +27,9 @@ public class League implements ListOfPlayers {
     }
 
     public List<Team> getTeams() {
-        return new ArrayList<Team>(teams);
+        List<Team> teamsToSort = new ArrayList<>(teams);
+        Collections.sort(teamsToSort);
+        return new ArrayList<Team>(teamsToSort);
     }
 
     public Team getTeam(int index) {
@@ -39,7 +41,6 @@ public class League implements ListOfPlayers {
         return players.size() + getTotalPlayerInTeams();
     }
 
-    // TODO: Needs Test
     public Player[] bumpPlayerFromLeague(int playerToBump) {
         Player bumpedPlayer = getPlayer(playerToBump);
         players.remove(bumpedPlayer);
@@ -54,7 +55,6 @@ public class League implements ListOfPlayers {
         }
     }
 
-    // TODO: Needs test
     public boolean addPlayerToLeague(Player newPlayer) {
         boolean joinedLeague;
         if(getTotalPlayersInLeague() < MAX_PLAYERS) {
@@ -67,21 +67,18 @@ public class League implements ListOfPlayers {
         return joinedLeague;
     }
 
-    // TODO: Needs test
     public int getTotalPlayerInTeams() {
         return getTeams().stream().mapToInt(Team::getPlayerCount).sum();
     }
 
-    // TODO: Needs test
     public Team getTeamWithMostPlayers() {
         return Collections.max(getTeams(), Comparator.comparing(Team::getPlayerCount));
     }
 
-    // TODO: Needs test
     public void addTeam(Team team) {
 
         // If only one player was on each team, we could have 33 teams
-        int totalTeamsCurrentlyAllowed = 33;
+        int maxTotalTeamsCurrentlyAllowed = getTotalPlayersInLeague();
 
         // If a team has been created
         if(getTeams().size() != 0) {
@@ -100,16 +97,16 @@ public class League implements ListOfPlayers {
                 double totalTeamsAllowedDouble = (double) totalTeamsAllowedFloat;
 
                 // cast into integer for comparison
-                totalTeamsCurrentlyAllowed = (int) Math.floor(totalTeamsAllowedDouble);
+                maxTotalTeamsCurrentlyAllowed = (int) Math.floor(totalTeamsAllowedDouble);
             }
 
         }
 
         // If we're requesting to make more teams than the current max allowed, throw exception
-        if (getTeams().size() < totalTeamsCurrentlyAllowed) {
+        if (getTeams().size() < maxTotalTeamsCurrentlyAllowed) {
             teams.add(team);
         } else {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("Not enough players for a new team");
         }
 
     }
@@ -135,6 +132,47 @@ public class League implements ListOfPlayers {
         players.add(playerToRemove);
 
         selectedTeam.removePlayer(playerToRemove);
+
+    }
+
+    // TODO: Needs test
+    public TreeMap<Integer, List<Player>> mapPlayersByHeight() {
+        TreeMap<Integer, List<Player>> playerByHeight = new TreeMap<>();
+
+        for(Player player: getPlayers()) {
+
+            List<Player> thisHeightList = playerByHeight.get(player.getHeightInInches());
+
+            if(thisHeightList == null) {
+                thisHeightList = new ArrayList<>();
+                playerByHeight.put(player.getHeightInInches(), thisHeightList);
+            }
+
+            thisHeightList.add(player);
+        }
+
+        return playerByHeight;
+    }
+
+    // TODO: Needs test
+    public List<Team> generateLeague(Map<String, String> teams) {
+
+        for(Map.Entry<String, String> team: teams.entrySet()) {
+            addTeam(new Team(team.getKey(), team.getValue()));
+        }
+
+        Map<Integer, List<Player>> playerHeightMap = mapPlayersByHeight();
+
+        // Arrange pt.2 (add eleven players to each team)
+        for(Map.Entry<Integer, List<Player>> nextHighestHeightEntry: playerHeightMap.entrySet()) {
+            List<Player> playersOfThisHeight = nextHighestHeightEntry.getValue();
+            for(Player player: playersOfThisHeight) {
+                int NoOfNextHighestPlayer = getPlayers().indexOf(player);
+                addPlayerToTeam(NoOfNextHighestPlayer, 0);
+            }
+        }
+
+        return getTeams();
 
     }
 

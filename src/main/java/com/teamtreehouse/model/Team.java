@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
+// toString, compareTo, mapPlayersByHeight, getTeamTier, getExpertCount, getTeamHeightSummary, printTeam
 /**
  * Created by nicolasjhampton on 10/16/16.
  */
@@ -29,9 +29,7 @@ public class Team implements Comparable<Team>, ListOfPlayers {
         return teamName;
     }
 
-    public int getPlayerCount() {
-        return players.size();
-    }
+    public int getPlayerCount() { return players.size(); }
 
     public void addPlayer(Player player) {
         players.add(player);
@@ -81,7 +79,6 @@ public class Team implements Comparable<Team>, ListOfPlayers {
         return printOut;
     }
 
-    // TODO: needs test
     public String getTeamHeightSummary() {
         String heightCountString = "";
         // Loop through players by height
@@ -111,16 +108,13 @@ public class Team implements Comparable<Team>, ListOfPlayers {
     }
 
     public int getTeamTier() {
+
         float expertsFloat = getExpertCount(true);
-        float noobsFloat = getExpertCount(false);
-        float tierFloat;
-        if(getExpertCount(true) > 0) {
-            tierFloat = ( ( ( ( (expertsFloat - noobsFloat) * 10f) / 11f ) + (expertsFloat - 1f) ) / 20f ) * 10f;
-            // (( (total exp. * 10 / max team size ) + (no. of experts on the team - 1) ) / points possible ) * 10
-            //              max: 10                               max: 10                       max:20
-        } else {
-            tierFloat = 0;
-        }
+        if(expertsFloat == 0) return 0;
+
+        float totalPlayersOnTeam = getPlayerCount();
+        float tierFloat = (expertsFloat / totalPlayersOnTeam) * 10f;
+
         return Math.round(tierFloat);
     }
 
@@ -169,10 +163,16 @@ public class Team implements Comparable<Team>, ListOfPlayers {
     public int compareTo(Team other) {
         if(equals(other)) {
             return 0;
-        } else if (teamName.equals(other.teamName)) {
-            return coach.compareTo(other.coach);
+        } else if (getPlayerCount() == other.getPlayerCount()) {
+
+            if(getTeamTier() == other.getTeamTier()) {
+                return teamName.compareTo(other.teamName);
+            }
+
+            return getTeamTier() - other.getTeamTier();
         }
-        return teamName.compareTo(other.teamName);
+
+        return getPlayerCount() - other.getPlayerCount();
     }
 
     ///////////////////////////////////////////////////
@@ -198,4 +198,24 @@ public class Team implements Comparable<Team>, ListOfPlayers {
         return title + stats + heights;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Team team = (Team) o;
+
+        if (!teamName.equals(team.teamName)) return false;
+        if (!coach.equals(team.coach)) return false;
+        return players != null ? players.equals(team.players) : team.players == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = teamName.hashCode();
+        result = 31 * result + coach.hashCode();
+        result = 31 * result + (players != null ? players.hashCode() : 0);
+        return result;
+    }
 }
